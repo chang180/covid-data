@@ -15,20 +15,58 @@ $output = curl_exec($ch);
 //釋放curl控制代碼
 curl_close($ch);
 
-//轉換csv檔案為json格式並輸出
-// $array = array_map("str_getcsv", explode("\n", $output));
-// echo json_encode($array);
-// $json= json_encode($array);
-
 //列印獲得的資料
 // echo "<script>console.log(" . $output . ")</script>";
 
 //去除縣市為空值及2021年之前筆數
-$remove_empty=[];
+$remove_empty = [];
 foreach (json_decode($output) as $key => $val) {
     // var_dump($val->{'縣市'},"<br>");
-    if($val->{'縣市'}!="空值" && $val->{'發病年份'}>2020) $remove_empty[]=$val;
+    if ($val->{'縣市'} != "空值" && $val->{'發病年份'} > 2020) $remove_empty[] = $val;
 }
+// print_r($remove_empty);
+
+// 分別處理各縣市按週別加總之發病人數
+// $new_array = json_encode([
+//     'city'=>'',
+//     'county'=>'',
+//     'year'=>'',
+//     'week'=>0,
+//     'number'=>0
+// ]);
+$new_array=[];
+
+foreach ($remove_empty as $k => $v) {
+    // var_dump($v);
+    // $vFlag = $v['縣市'].$v['鄉鎮'].$v['發病年份'].$v['發病週別'];
+    $vFlag = $v->{'縣市'} . $v->{'鄉鎮'} . $v->{'發病年份'} . $v->{'發病週別'};
+
+    if (isset($new_array[$vFlag])) {
+        // $new_array[$vFlag]['number'] += $v['確定病例數'];
+        $new_array['number'] += $v['確定病例數'];
+        // $new_array['city'] = $v->{'縣市'};
+        // $new_array['county'] = $v->{'鄉鎮'};
+        // $new_array['year'] = $v->{'發病年份'};
+        // $new_array['week'] = $v->{'發病週別'};
+        // $new_array['number'] = $v->{'確定病例數'};
+    } else {
+        // $new_array->{'city'} = $v->{'縣市'};
+        // $new_array->{'county'} = $v->{'鄉鎮'};
+        // $new_array->{'year'} = $v->{'發病年份'};
+        // $new_array->{'week'} = $v->{'發病週別'};
+        // $new_array->{'number'} = $v->{'確定病例數'};
+        $new_array['city'] = $v->{'縣市'};
+        $new_array['county'] = $v->{'鄉鎮'};
+        $new_array['year'] = $v->{'發病年份'};
+        $new_array['week'] = $v->{'發病週別'};
+        $new_array['number'] = $v->{'確定病例數'};
+    }
+}
+var_dump($new_array);
+// print_r(array_values($new_array));
+
+// $strOUT = json_encode($arrOUT);
+// echo $strOUT;
 
 //將資料存入json檔，若json已存在，先刪除再存
 
@@ -40,4 +78,3 @@ fwrite($open, json_encode($remove_empty));
 fclose($open);
 // echo "file updated";
 // echo "<script>console.log(" . json_encode($remove_empty) . ")</script>";
-
